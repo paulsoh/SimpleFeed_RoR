@@ -1,6 +1,6 @@
 # The Model: Post
 class Post < ActiveRecord::Base
-  attr_accessible :content, :name, :url, :title
+  attr_accessible :content, :name, :url, :title, :tags_attributes
 
   validates :name, presence: true
   validates :title, presence: true,
