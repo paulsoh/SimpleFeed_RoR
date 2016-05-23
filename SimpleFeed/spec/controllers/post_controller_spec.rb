@@ -90,7 +90,32 @@ describe PostsController do
   end
 
   describe '#update' do
-    skip
+    let!(:post) do 
+      create(:post, title: 'Old title', name: 'Old name')
+    end
+
+    it 'changes post attributes' do
+      put :update, id: post.id, post: { title: 'New title', name: 'New name' }
+      post.reload
+      expect(post.title).to eq 'New title'
+      expect(post.name).to eq 'New name'
+    end
+
+    it 'does not accept title less than 4 chars' do
+      put :update, id: post.id, post: { title: 'abc', name: 'nil' }
+      post.reload
+      expect(post.title).not_to eq 'abc'
+    end
+
+    it 'redirects to updated post' do
+      put :update, id: post.id, post: { title: 'New name', name: 'New name' }
+      expect(response).to redirect_to(:post)
+    end
+
+    it 're-renders edit method' do
+      put :update, id: post.id, post: { title: nil, name: nil }
+      expect(response).to render_template(:edit)
+    end
   end
 
   describe '#delete' do
