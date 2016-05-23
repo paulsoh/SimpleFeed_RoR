@@ -119,6 +119,19 @@ describe PostsController do
   end
 
   describe '#delete' do
-    skip
+    let!(:post) do 
+      create(:post, title: 'test title', name: 'test name')
+    end
+
+    it 'deletes post' do
+      expect do 
+        delete :destroy, id: post.id 
+      end.to change(Post, :count).by(-1)
+    end
+
+    it 'redirects to index' do
+      delete :destroy, id: post.id 
+      expect(response).to redirect_to posts_url
+    end
   end
 end
