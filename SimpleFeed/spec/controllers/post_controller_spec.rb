@@ -28,11 +28,11 @@ describe PostsController do
     end
 
     it 'returns one post' do
-      skip
+      skip 'Pending implementation, implemented multiple post retrival' 
     end
 
     it 'returns empty list(no post)' do
-      skip
+      skip 'Pending implementation, implemented multiple post retrival' 
     end
   end
 
@@ -46,6 +46,21 @@ describe PostsController do
     it 'renders show template' do
       get :show, id: post.id
       expect(response).to render_template(:show)
+    end
+
+    it 'returns post title' do
+      get :show, id: post.id
+      expect(assigns(:post).title).to eq 'New title'
+    end
+
+    it 'returns post title' do
+      get :show, id: post.id
+      expect(assigns(:post).name).to eq 'New name'
+    end
+
+    it 'returns post content' do
+      get :show, id: post.id
+      expect(assigns(:post).content).to eq 'Content'
     end
   end
 
