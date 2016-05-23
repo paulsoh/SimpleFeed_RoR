@@ -23,8 +23,7 @@ describe PostsController do
 
     it 'returns an list of posts' do
       get :index
-      puts(assigns)
-      expect(assigns(:posts).length).to eq([post1, post2].length)
+      expect(assigns(:posts)).to eq([post1, post2])
     end
 
     it 'returns one post' do
@@ -37,7 +36,9 @@ describe PostsController do
   end
 
   describe '#show' do
-    let!(:post) { create(:post) }
+    let!(:post) do 
+      create(:post, title: 'New title', name: 'New name', content: 'Content')
+    end
 
     it 'returns 200 response' do
       expect(response.status).to eq 200
@@ -65,15 +66,27 @@ describe PostsController do
   end
 
   describe '#create' do
-    skip
-  end
+    it 'create new post' do
+      expect do
+        post :create, post: { title: 'New title', name: 'New name' }
+      end.to change(Post, :count).by(1)
+    end
 
-  describe '#new' do
-    skip
-  end
+    it 'redirect to new post' do
+      post :create, post: { title: 'New title', name: 'New name' }
+      expect(response).to redirect_to Post.last
+    end
 
-  describe '#edit' do
-    skip
+    it 'does not create invalid post' do
+      expect do
+        post :create, post: { title: nil, name: nil }
+      end.to_not change(Post, :count)
+    end
+
+    it 're-renders new method' do
+      post :create, post: { title: nil, name: nil }
+      expect(response).to render_template(:new)
+    end
   end
 
   describe '#update' do
