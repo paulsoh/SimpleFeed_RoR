@@ -2,7 +2,16 @@
 require 'rails_helper'
 
 describe PostsController do
+  # ===============================================================
+  #
+  #                              TEST
+  #
+  # ===============================================================
+
   describe '#index' do
+    let!(:post1) { create(:post) }
+    let!(:post2) { create(:post) }
+
     it 'returns 200 response' do
       expect(response.status).to eq 200
     end
@@ -13,7 +22,9 @@ describe PostsController do
     end
 
     it 'returns an list of posts' do
-      skip
+      get :index
+      puts(assigns)
+      expect(assigns(:posts).length).to eq([post1, post2].length)
     end
 
     it 'returns one post' do
@@ -36,6 +47,25 @@ describe PostsController do
       get :show, id: post.id
       expect(response).to render_template(:show)
     end
-    
+  end
+
+  describe '#create' do
+    skip
+  end
+
+  describe '#new' do
+    skip
+  end
+
+  describe '#edit' do
+    skip
+  end
+
+  describe '#update' do
+    skip
+  end
+
+  describe '#delete' do
+    skip
   end
 end

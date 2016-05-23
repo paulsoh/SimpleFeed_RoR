@@ -2,10 +2,17 @@
 
 FactoryGirl.define do
   factory :post do
-    title 'Test title'
-    name 'Test name'
-    url 'http://test.com'
-    content 'Test content Test content'
+    title { 'New title' } 
+    name { 'New name' }
+    url { 'http://test.com/' }
+    content { 'Content' }
+  end
+
+  trait :invalid_post do
+    title nil
+    name nil
+    url nil
+    content nil
   end
 
   trait :invalid_url do
