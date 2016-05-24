@@ -243,10 +243,10 @@ describe PostsController do
 
         it 'does not accept title less than 4 chars' do
           put :update, id: post.id, post: { title: 'abc' }
-          expect(post.reload.title).not_to eq 'abc'
+          expect(post.reload.title).to eq post.title
         end
 
-        it 'does not nil name' do
+        it 'does not accept nil name' do
           put :update, id: post.id, post: { name: nil }
           expect(post.reload.name).to eq post.name 
         end
@@ -254,6 +254,48 @@ describe PostsController do
         it 're-renders edit method' do
           put :update, id: post.id, post: { title: nil, name: nil }
           expect(response).to render_template(:edit)
+        end
+      end
+    end
+    describe 'json format' do
+      context 'when post update success' do
+        let!(:post) { create(:post) }
+
+        it 'update post title' do
+          put :update, id: post.id, post: { title: 'New title' }, format: :json
+          expect(post.reload.title).to eq 'New title'
+        end
+
+        it 'update post name' do
+          put :update, id: post.id, post: { name: 'New name' }, format: :json
+          expect(post.reload.name).to eq 'New name'
+        end
+
+        it 'returns 204 status code' do
+          put :update, id: post.id, format: :json
+          expect(response.status).to eq 204
+        end
+      end
+
+      context 'when post update fail' do
+        let!(:post) { create(:post) }
+
+        it 'does not accept title less than 4 chars' do
+          put :update, id: post.id, post: { title: 'abc' }, format: :json
+          expect(post.reload.title).to eq post.title
+        end
+
+        it 'does not accept nil name' do
+          put :update, id: post.id, post: { name: nil }, format: :json
+          expect(post.reload.name).to eq post.name 
+        end
+
+        it 'returns 422 status code' do
+          put :update, 
+              id: post.id, 
+              post: { title: nil, name: nil }, 
+              format: :json
+          expect(response.status).to eq 422
         end
       end
     end
