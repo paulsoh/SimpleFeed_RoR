@@ -22,6 +22,15 @@ describe PostsController do
     end
   end
 
+  shared_examples 'single param update' do |params|
+    let!(:post) { create(:post) }
+    it "updates post #{params.keys[0]} field" do
+      put :update, id: post.id, post: params
+      expect(post.reload.send(params.keys[0]))
+      .to eq params.values[0]
+    end
+  end
+
   # ===============================================================
   #
   #                              TEST
@@ -226,18 +235,11 @@ describe PostsController do
   describe '#update' do
     describe 'html format' do
       context 'when post update success' do
+        include_examples 'single param update', title: 'Update title'
+        include_examples 'single param update', name: 'Update name'  
+        include_examples 'single param update', content: 'Update content'
+
         let!(:post) { create(:post) }
-
-        it 'update post title' do
-          put :update, id: post.id, post: { title: 'New title' }
-          expect(post.reload.title).to eq 'New title'
-        end
-
-        it 'update post name' do
-          put :update, id: post.id, post: { name: 'New name' }
-          expect(post.reload.name).to eq 'New name'
-        end
-
         it 'redirects to updated post' do
           put :update, id: post.id
           expect(response).to redirect_to(:post)
