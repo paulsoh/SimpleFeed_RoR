@@ -77,7 +77,6 @@ describe PostsController do
     end
   end
 
-
   describe '#show' do
     describe 'html format' do
       let!(:post) {create(:post)}
@@ -109,6 +108,7 @@ describe PostsController do
 
       context 'when param is invalid' do
         subject { get :show, id: -1 }
+
         it 'redirect to :index view' do
           subject
           expect(response).to redirect_to posts_url
@@ -120,6 +120,7 @@ describe PostsController do
       let!(:post) {create(:post)}
       context 'when param is valid and post exists' do
         subject { get :show, id: post.id, format: :json }
+
         it 'returns 200 response' do
           subject
           expect(response.status).to eq 200
@@ -133,6 +134,7 @@ describe PostsController do
 
       context 'when param is valid and post does not exist' do
         subject { get :show, id: Post.last.id + 1, format: :json }
+
         it 'returns 404 not found' do
           subject
           expect(response.status).to eq 404
@@ -141,6 +143,7 @@ describe PostsController do
 
       context 'when param is invalid' do
         subject { get :show, id: -1, format: :json }
+
         it 'returns 404 not found' do
           subject
           expect(response.status).to eq 404
@@ -150,54 +153,109 @@ describe PostsController do
   end
 
   describe '#create' do
-    it 'create new post' do
-      expect do
-        post :create, post: { title: 'New title', name: 'New name' }
-      end.to change(Post, :count).by(1)
+    describe 'html format' do
+      context 'when post create success' do
+        subject { post :create, post: attributes_for(:post) }
+
+        it 'create new post' do
+          expect { subject }
+          .to change(Post, :count).by(1)
+        end
+
+        it 'redirect to new post' do
+          subject
+          expect(response).to redirect_to Post.last
+        end
+      end
+
+      context 'when post create fails' do
+        it 'does not create post with invalid title' do
+          expect do
+            post :create, post: { title: nil }
+          end.to_not change(Post, :count)
+        end
+
+        it 'does not create post with invalid name' do
+          expect do
+            post :create, post: { name: nil }
+          end.to_not change(Post, :count)
+        end
+
+        it 're-renders new method' do
+          post :create, post: { title: nil, name: nil }
+          expect(response).to render_template(:new)
+        end
+      end
     end
 
-    it 'redirect to new post' do
-      post :create, post: { title: 'New title', name: 'New name' }
-      expect(response).to redirect_to Post.last
-    end
+    describe 'json format' do
+      context 'when post create success' do
+        subject { post :create, post: attributes_for(:post), format: :json }
 
-    it 'does not create invalid post' do
-      expect do
-        post :create, post: { title: nil, name: nil }
-      end.to_not change(Post, :count)
-    end
+        it 'create new post' do
+          expect { subject }
+          .to change(Post, :count).by(1)
+        end
 
-    it 're-renders new method' do
-      post :create, post: { title: nil, name: nil }
-      expect(response).to render_template(:new)
+        it 'returns status 201' do
+          subject
+          expect(response.status).to eq 201
+        end
+      end
+
+      context 'when post create fails' do
+        it 'post with invalid title returns status 422' do
+          post :create, post: { title: nil }, format: :json
+          expect(response.status).to eq 422
+        end
+
+        it 'post with invalid name returns status 422' do
+          post :create, post: { name: nil }, format: :json
+          expect(response.status).to eq 422
+        end
+      end
     end
   end
 
   describe '#update' do
-    let!(:post) do 
-      create(:post, title: 'Old title', name: 'Old name')
-    end
+    describe 'html format' do
+      context 'when post update success' do
+        let!(:post) { create(:post) }
 
-    it 'changes post attributes' do
-      put :update, id: post.id, post: { title: 'New title', name: 'New name' }
-      post.reload
-      expect(post.title).to eq 'New title'
-      expect(post.name).to eq 'New name'
-    end
+        it 'update post title' do
+          put :update, id: post.id, post: { title: 'New title' }
+          expect(post.reload.title).to eq 'New title'
+        end
 
-    it 'does not accept title less than 4 chars' do
-      put :update, id: post.id, post: { title: 'abc', name: 'nil' }
-      expect(post.reload.title).not_to eq 'abc'
-    end
+        it 'update post name' do
+          put :update, id: post.id, post: { name: 'New name' }
+          expect(post.reload.name).to eq 'New name'
+        end
 
-    it 'redirects to updated post' do
-      put :update, id: post.id, post: { title: 'New name', name: 'New name' }
-      expect(response).to redirect_to(:post)
-    end
+        it 'redirects to updated post' do
+          put :update, id: post.id
+          expect(response).to redirect_to(:post)
+        end
+      end
 
-    it 're-renders edit method' do
-      put :update, id: post.id, post: { title: nil, name: nil }
-      expect(response).to render_template(:edit)
+      context 'when post update fail' do
+        let!(:post) { create(:post) }
+
+        it 'does not accept title less than 4 chars' do
+          put :update, id: post.id, post: { title: 'abc' }
+          expect(post.reload.title).not_to eq 'abc'
+        end
+
+        it 'does not nil name' do
+          put :update, id: post.id, post: { name: nil }
+          expect(post.reload.name).to eq post.name 
+        end
+
+        it 're-renders edit method' do
+          put :update, id: post.id, post: { title: nil, name: nil }
+          expect(response).to render_template(:edit)
+        end
+      end
     end
   end
 
