@@ -10,6 +10,7 @@ describe PostsController do
 
   describe '#index' do
     it 'returns 200 response' do
+      get :index
       expect(response.status).to eq 200
     end
 
@@ -43,33 +44,23 @@ describe PostsController do
   end
 
   describe '#show' do
-    let!(:post) do 
-      create(:post, title: 'New title', name: 'New name', content: 'Content')
-    end
+    let!(:post) {create(:post)}
 
     context 'when there is post' do
+      subject { get :show, id: post.id }
       it 'returns 200 response' do
+        subject
         expect(response.status).to eq 200
       end
 
       it 'renders show template' do
-        get :show, id: post.id
+        subject
         expect(response).to render_template(:show)
       end
 
-      it 'returns post title' do
-        get :show, id: post.id
-        expect(assigns(:post).title).to eq 'New title'
-      end
-
-      it 'returns post title' do
-        get :show, id: post.id
-        expect(assigns(:post).name).to eq 'New name'
-      end
-
-      it 'returns post content' do
-        get :show, id: post.id
-        expect(assigns(:post).content).to eq 'Content'
+      it 'returns post with post.id' do
+        subject
+        expect(assigns(:post).id).to eq post.id
       end
     end
 
@@ -119,8 +110,7 @@ describe PostsController do
 
     it 'does not accept title less than 4 chars' do
       put :update, id: post.id, post: { title: 'abc', name: 'nil' }
-      post.reload
-      expect(post.title).not_to eq 'abc'
+      expect(post.reload.title).not_to eq 'abc'
     end
 
     it 'redirects to updated post' do
