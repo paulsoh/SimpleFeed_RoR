@@ -34,7 +34,7 @@ describe PostsController do
       end
     end
 
-    context 'when there no post' do
+    context 'when there are no posts' do
       it 'returns empty list(no post)' do
         get :index
         expect(assigns(:posts)).to be_empty 
@@ -47,28 +47,37 @@ describe PostsController do
       create(:post, title: 'New title', name: 'New name', content: 'Content')
     end
 
-    it 'returns 200 response' do
-      expect(response.status).to eq 200
+    context 'when there is post' do
+      it 'returns 200 response' do
+        expect(response.status).to eq 200
+      end
+
+      it 'renders show template' do
+        get :show, id: post.id
+        expect(response).to render_template(:show)
+      end
+
+      it 'returns post title' do
+        get :show, id: post.id
+        expect(assigns(:post).title).to eq 'New title'
+      end
+
+      it 'returns post title' do
+        get :show, id: post.id
+        expect(assigns(:post).name).to eq 'New name'
+      end
+
+      it 'returns post content' do
+        get :show, id: post.id
+        expect(assigns(:post).content).to eq 'Content'
+      end
     end
 
-    it 'renders show template' do
-      get :show, id: post.id
-      expect(response).to render_template(:show)
-    end
-
-    it 'returns post title' do
-      get :show, id: post.id
-      expect(assigns(:post).title).to eq 'New title'
-    end
-
-    it 'returns post title' do
-      get :show, id: post.id
-      expect(assigns(:post).name).to eq 'New name'
-    end
-
-    it 'returns post content' do
-      get :show, id: post.id
-      expect(assigns(:post).content).to eq 'Content'
+    context 'when post param is invalid' do
+      it 'returns record not found error' do
+        expect {get :show, id: -1}
+        .to raise_exception(ActiveRecord::RecordNotFound)
+      end
     end
   end
 
