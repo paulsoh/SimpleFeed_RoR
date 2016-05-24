@@ -309,19 +309,50 @@ describe PostsController do
   end
 
   describe '#delete' do
-    let!(:post) do 
-      create(:post, title: 'test title', name: 'test name')
-    end
+    describe 'html format' do
+      let!(:post) {create(:post)}
+      context 'when param is valid and post exists' do
+        subject { delete :destroy, id: post.id }
+        it 'deletes post from DB' do
+          expect { subject }
+          .to change(Post, :count).by(-1)
+        end
 
-    it 'deletes post' do
-      expect do 
-        delete :destroy, id: post.id 
-      end.to change(Post, :count).by(-1)
-    end
+        it 'redirects to :index' do
+          subject
+          expect(response).to redirect_to posts_url
+        end
+      end
 
-    it 'redirects to index' do
-      delete :destroy, id: post.id 
-      expect(response).to redirect_to posts_url
+      context 'when param is invalid' do
+        subject { delete :destroy, id: Post.last.id + 1 }
+        it 'invalid id redirects to index' do
+          subject
+          expect(response).to redirect_to posts_url
+        end
+      end
+    end
+    describe 'json format' do
+      let!(:post) {create(:post)}
+      context 'when param is valid and post exists' do
+        subject { delete :destroy, id: post.id, format: :json }
+        it 'deletes post from DB' do
+          expect { subject }
+          .to change(Post, :count).by(-1)
+        end
+
+        it 'returns 204 status code' do
+          subject
+          expect(response.status).to eq 204
+        end
+      end
+      context 'when param is invalid' do
+        subject { delete :destroy, id: Post.last.id + 1, format: :json }
+        it 'invalid id returns 422 status code' do
+          subject
+          expect(response.status).to eq 422
+        end
+      end
     end
   end
 end

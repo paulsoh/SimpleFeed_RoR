@@ -96,12 +96,19 @@ class PostsController < ApplicationController
   # DELETE /posts/1
   # DELETE /posts/1.json
   def destroy
-    @post = Post.find(params[:id])
-    @post.destroy
+    @post = Post.find_by_id(params[:id])
 
     respond_to do |format|
-      format.html { redirect_to posts_url }
-      format.json { head :no_content }
+      if @post
+        @post.destroy
+        format.html { redirect_to posts_url }
+        format.json { head :no_content }
+      else
+        format.html { redirect_to posts_url }
+        format.json do
+          render json: { error: 'Post not found' }, status: :unprocessable_entity
+        end
+      end
     end
   end
 end
