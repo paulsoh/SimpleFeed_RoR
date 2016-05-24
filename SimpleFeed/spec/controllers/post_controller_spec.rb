@@ -290,10 +290,17 @@ describe PostsController do
           expect(post.reload.name).to eq post.name 
         end
 
-        it 'returns 422 status code' do
+        it 'invalid params return 422 status code' do
           put :update, 
               id: post.id, 
               post: { title: nil, name: nil }, 
+              format: :json
+          expect(response.status).to eq 422
+        end
+
+        it 'invalid id returns 422 status code' do
+          put :update, 
+              id: Post.last.id + 1, 
               format: :json
           expect(response.status).to eq 422
         end

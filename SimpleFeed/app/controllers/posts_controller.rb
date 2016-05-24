@@ -69,17 +69,26 @@ class PostsController < ApplicationController
   # PUT /posts/1
   # PUT /posts/1.json
   def update
-    @post = Post.find(params[:id])
+    @post = Post.find_by_id(params[:id])
 
     respond_to do |format|
-      if @post.update_attributes(params[:post])
-        format.html do
-          redirect_to @post, notice: 'Post was successfully updated.'
+      if @post
+        if @post.update_attributes(params[:post])
+          format.html do
+            redirect_to @post, notice: 'Post was successfully updated.'
+          end
+          format.json { head :no_content }
+        else
+          format.html { render action: 'edit' }
+          format.json do
+            render json: @post.errors, status: :unprocessable_entity
+          end
         end
-        format.json { head :no_content }
       else
-        format.html { render action: 'edit' }
-        format.json { render json: @post.errors, status: :unprocessable_entity }
+        format.html { redirect_to posts_url }
+        format.json do 
+          render json: { error: 'Post not found' }, status: :unprocessable_entity
+        end
       end
     end
   end
