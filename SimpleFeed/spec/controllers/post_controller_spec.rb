@@ -9,9 +9,6 @@ describe PostsController do
   # ===============================================================
 
   describe '#index' do
-    let!(:post1) { create(:post) }
-    let!(:post2) { create(:post) }
-
     it 'returns 200 response' do
       expect(response.status).to eq 200
     end
@@ -21,17 +18,27 @@ describe PostsController do
       expect(response).to render_template(:index)
     end
 
-    it 'returns an list of posts' do
-      get :index
-      expect(assigns(:posts)).to eq([post1, post2])
+    context 'when more than one post' do
+      let!(:post_list) { create_list :post, 3 }
+      it 'returns an list of posts' do
+        get :index
+        expect(assigns(:posts)).to eq(post_list)
+      end
     end
 
-    it 'returns one post' do
-      skip 'Pending implementation, implemented multiple post retrival' 
+    context 'when there is one post' do
+      let!(:post) { create(:post) }
+      it 'returns one post' do
+        get :index
+        expect(assigns(:posts)).to eq([post])
+      end
     end
 
-    it 'returns empty list(no post)' do
-      skip 'Pending implementation, implemented multiple post retrival' 
+    context 'when there no post' do
+      it 'returns empty list(no post)' do
+        get :index
+        expect(assigns(:posts)).to be_empty 
+      end
     end
   end
 
