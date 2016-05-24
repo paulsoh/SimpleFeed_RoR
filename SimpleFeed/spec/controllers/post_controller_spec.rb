@@ -43,10 +43,9 @@ describe PostsController do
     end
   end
 
-  describe '#show' do
+  describe '#show html format' do
     let!(:post) {create(:post)}
-
-    context 'when there is post' do
+    context 'when param is valid and post exists' do
       subject { get :show, id: post.id }
       it 'returns 200 response' do
         subject
@@ -64,10 +63,51 @@ describe PostsController do
       end
     end
 
-    context 'when post param is invalid' do
-      it 'returns record not found error' do
-        expect {get :show, id: -1}
-        .to raise_exception(ActiveRecord::RecordNotFound)
+    context 'when param is valid and post does not exist' do
+      subject { get :show, id: Post.last.id + 1 }
+      it 'redirect to :index view' do
+        subject
+        expect(response).to redirect_to posts_url
+      end
+    end
+
+    context 'when param is invalid' do
+      subject { get :show, id: -1 }
+      it 'redirect to :index view' do
+        subject
+        expect(response).to redirect_to posts_url
+      end
+    end
+  end
+
+  describe '#show json format' do
+    let!(:post) {create(:post)}
+    context 'when param is valid and post exists' do
+      subject { get :show, id: post.id, format: :json }
+      it 'returns 200 response' do
+        subject
+        expect(response.status).to eq 200
+      end
+
+      it 'returns post with post.id' do
+        subject
+        expect(JSON.parse(response.body)['id']).to eq post.id
+      end
+    end
+
+    context 'when param is valid and post does not exist' do
+      subject { get :show, id: Post.last.id + 1, format: :json }
+      it 'returns 404 not found' do
+        subject
+        expect(response.status).to eq 404
+      end
+    end
+
+    context 'when param is invalid' do
+      subject { get :show, id: -1, format: :json }
+      it 'returns 404 not found' do
+        subject
+        expect(response.status).to eq 404
       end
     end
   end

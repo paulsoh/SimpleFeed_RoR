@@ -14,11 +14,20 @@ class PostsController < ApplicationController
   # GET /posts/1
   # GET /posts/1.json
   def show
-    @post = Post.find(params[:id])
+    @post = Post.find_by_id(params[:id])
 
-    respond_to do |format|
-      format.html # show.html.erb
-      format.json { render json: @post }
+    if @post
+      respond_to do |format|
+        format.html # show.html.erb
+        format.json { render json: @post }
+      end
+    else
+      respond_to do |format|
+        format.html { redirect_to posts_url }
+        format.json do 
+          render json: { error: 'Post not found' }, status: :not_found
+        end
+      end
     end
   end
 
