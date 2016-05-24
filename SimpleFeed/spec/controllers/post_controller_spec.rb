@@ -9,105 +9,142 @@ describe PostsController do
   # ===============================================================
 
   describe '#index' do
-    it 'returns 200 response' do
-      get :index
-      expect(response.status).to eq 200
-    end
-
-    it 'renders index template' do
-      get :index
-      expect(response).to render_template(:index)
-    end
-
-    context 'when more than one post' do
-      let!(:post_list) { create_list :post, 3 }
-      it 'returns an list of posts' do
-        get :index
-        expect(assigns(:posts)).to eq(post_list)
-      end
-    end
-
-    context 'when there is one post' do
-      let!(:post) { create(:post) }
-      it 'returns one post' do
-        get :index
-        expect(assigns(:posts)).to eq([post])
-      end
-    end
-
-    context 'when there are no posts' do
-      it 'returns empty list(no post)' do
-        get :index
-        expect(assigns(:posts)).to be_empty 
-      end
-    end
-  end
-
-  describe '#show html format' do
-    let!(:post) {create(:post)}
-    context 'when param is valid and post exists' do
-      subject { get :show, id: post.id }
+    describe 'html format' do
+      subject { get :index }
       it 'returns 200 response' do
         subject
         expect(response.status).to eq 200
       end
 
-      it 'renders show template' do
+      it 'renders index template' do
         subject
-        expect(response).to render_template(:show)
+        expect(response).to render_template(:index)
       end
 
-      it 'returns post with post.id' do
-        subject
-        expect(assigns(:post).id).to eq post.id
+      context 'when more than one post' do
+        let!(:post_list) { create_list :post, 3 }
+        it 'returns an list of posts' do
+          subject
+          expect(assigns(:posts)).to eq(post_list)
+        end
+      end
+
+      context 'when there is one post' do
+        let!(:post) { create(:post) }
+        it 'returns one post' do
+          subject
+          expect(assigns(:posts)).to eq([post])
+        end
+      end
+
+      context 'when there are no posts' do
+        it 'returns empty list(no post)' do
+          subject
+          expect(assigns(:posts)).to be_empty 
+        end
       end
     end
 
-    context 'when param is valid and post does not exist' do
-      subject { get :show, id: Post.last.id + 1 }
-      it 'redirect to :index view' do
-        subject
-        expect(response).to redirect_to posts_url
-      end
-    end
-
-    context 'when param is invalid' do
-      subject { get :show, id: -1 }
-      it 'redirect to :index view' do
-        subject
-        expect(response).to redirect_to posts_url
-      end
-    end
-  end
-
-  describe '#show json format' do
-    let!(:post) {create(:post)}
-    context 'when param is valid and post exists' do
-      subject { get :show, id: post.id, format: :json }
+    describe 'json format' do
+      subject { get :index, format: :json }
       it 'returns 200 response' do
         subject
         expect(response.status).to eq 200
       end
 
-      it 'returns post with post.id' do
-        subject
-        expect(JSON.parse(response.body)['id']).to eq post.id
+      context 'when more than one post' do
+        let!(:post_list) { create_list :post, 3 }
+        it 'returns an list of posts' do
+          subject
+          expect(JSON.parse(response.body).length).to eq post_list.length
+        end
+      end
+
+      context 'when there is one post' do
+        let!(:post) { create(:post) }
+        it 'returns one post' do
+          subject
+          expect(JSON.parse(response.body).length).to eq [post].length
+        end
+      end
+
+      context 'when there are no posts' do
+        it 'returns empty list(no post)' do
+          subject
+          expect(JSON.parse(response.body).length).to eq 0 
+        end
+      end
+    end
+  end
+
+
+  describe '#show' do
+    describe 'html format' do
+      let!(:post) {create(:post)}
+      context 'when param is valid and post exists' do
+        subject { get :show, id: post.id }
+        it 'returns 200 response' do
+          subject
+          expect(response.status).to eq 200
+        end
+
+        it 'renders show template' do
+          subject
+          expect(response).to render_template(:show)
+        end
+
+        it 'returns post with post.id' do
+          subject
+          expect(assigns(:post).id).to eq post.id
+        end
+      end
+
+      context 'when param is valid and post does not exist' do
+        subject { get :show, id: Post.last.id + 1 }
+        it 'redirect to :index view' do
+          subject
+          expect(response).to redirect_to posts_url
+        end
+      end
+
+      context 'when param is invalid' do
+        subject { get :show, id: -1 }
+        it 'redirect to :index view' do
+          subject
+          expect(response).to redirect_to posts_url
+        end
       end
     end
 
-    context 'when param is valid and post does not exist' do
-      subject { get :show, id: Post.last.id + 1, format: :json }
-      it 'returns 404 not found' do
-        subject
-        expect(response.status).to eq 404
-      end
-    end
+    describe 'json format' do
+      let!(:post) {create(:post)}
+      context 'when param is valid and post exists' do
+        subject { get :show, id: post.id, format: :json }
+        it 'returns 200 response' do
+          subject
+          expect(response.status).to eq 200
+        end
 
-    context 'when param is invalid' do
-      subject { get :show, id: -1, format: :json }
-      it 'returns 404 not found' do
-        subject
-        expect(response.status).to eq 404
+        it 'returns post with post.id' do
+          subject
+          expect(JSON.parse(response.body)['id']).to eq post.id
+        end
+      end
+
+      context 'when param is valid and post does not exist' do
+        subject { get :show, id: Post.last.id + 1, format: :json }
+        it 'returns 404 not found' do
+          subject
+          expect(response.status).to eq 404
+        end
+      end
+
+      context 'when param is invalid' do
+        subject { get :show, id: -1, format: :json }
+        it 'returns 404 not found' do
+          subject
+          expect(response.status).to eq 404
+        end
       end
     end
   end
