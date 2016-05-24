@@ -4,6 +4,26 @@ require 'rails_helper'
 describe PostsController do
   # ===============================================================
   #
+  #                         SHARED EXAMPLES
+  #
+  # =============================================================== 
+
+  shared_examples 'render status code' do |http_status_code|
+    it "renders #{http_status_code} status code" do
+      subject
+      expect(response).to have_http_status(http_status_code)
+    end
+  end
+
+  shared_examples 'renders template' do |name|
+    it "renders #{name} template" do
+      subject
+      expect(response).to render_template(name)
+    end
+  end
+
+  # ===============================================================
+  #
   #                              TEST
   #
   # ===============================================================
@@ -11,15 +31,9 @@ describe PostsController do
   describe '#index' do
     describe 'html format' do
       subject { get :index }
-      it 'returns 200 response' do
-        subject
-        expect(response.status).to eq 200
-      end
 
-      it 'renders index template' do
-        subject
-        expect(response).to render_template(:index)
-      end
+      include_examples 'render status code', 200
+      include_examples 'renders template', :index
 
       context 'when more than one post' do
         let!(:post_list) { create_list :post, 3 }
@@ -47,10 +61,8 @@ describe PostsController do
 
     describe 'json format' do
       subject { get :index, format: :json }
-      it 'returns 200 response' do
-        subject
-        expect(response.status).to eq 200
-      end
+
+      include_examples 'render status code', 200
 
       context 'when more than one post' do
         let!(:post_list) { create_list :post, 3 }
@@ -82,15 +94,9 @@ describe PostsController do
       let!(:post) {create(:post)}
       context 'when param is valid and post exists' do
         subject { get :show, id: post.id }
-        it 'returns 200 response' do
-          subject
-          expect(response.status).to eq 200
-        end
 
-        it 'renders show template' do
-          subject
-          expect(response).to render_template(:show)
-        end
+        include_examples 'render status code', 200
+        include_examples 'renders template', :show
 
         it 'returns post with post.id' do
           subject
@@ -121,10 +127,7 @@ describe PostsController do
       context 'when param is valid and post exists' do
         subject { get :show, id: post.id, format: :json }
 
-        it 'returns 200 response' do
-          subject
-          expect(response.status).to eq 200
-        end
+        include_examples 'render status code', 200
 
         it 'returns post with post.id' do
           subject
@@ -135,10 +138,7 @@ describe PostsController do
       context 'when param is valid and post does not exist' do
         subject { get :show, id: Post.last.id + 1, format: :json }
 
-        it 'returns 404 not found' do
-          subject
-          expect(response.status).to eq 404
-        end
+        include_examples 'render status code', 404 
 
         it 'returns error message' do
           subject
@@ -150,10 +150,7 @@ describe PostsController do
       context 'when param is invalid' do
         subject { get :show, id: -1, format: :json }
 
-        it 'returns 404 not found' do
-          subject
-          expect(response.status).to eq 404
-        end
+        include_examples 'render status code', 404 
 
         it 'returns error message' do
           subject
@@ -209,10 +206,7 @@ describe PostsController do
           .to change(Post, :count).by(1)
         end
 
-        it 'returns status 201' do
-          subject
-          expect(response.status).to eq 201
-        end
+        include_examples 'render status code', 201
       end
 
       context 'when post create fails' do
@@ -318,10 +312,8 @@ describe PostsController do
               id: Post.last.id + 1, 
               format: :json
         end
-        it 'returns 422 status code' do
-          subject
-          expect(response.status).to eq 422
-        end
+
+        include_examples 'render status code', 422
 
         it 'returns error message' do
           subject
@@ -366,17 +358,12 @@ describe PostsController do
           .to change(Post, :count).by(-1)
         end
 
-        it 'returns 204 status code' do
-          subject
-          expect(response.status).to eq 204
-        end
+        include_examples 'render status code', 204 
       end
       context 'when param is invalid' do
         subject { delete :destroy, id: Post.last.id + 1, format: :json }
-        it 'invalid id returns 422 status code' do
-          subject
-          expect(response.status).to eq 422
-        end
+
+        include_examples 'render status code', 422 
 
         it 'returns error message' do
           subject
