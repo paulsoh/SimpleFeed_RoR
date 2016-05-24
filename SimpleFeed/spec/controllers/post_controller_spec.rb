@@ -22,12 +22,43 @@ describe PostsController do
     end
   end
 
-  shared_examples 'single param update' do |params|
+  shared_examples 'single param update' do |params, format|
     let!(:post) { create(:post) }
     it "updates post #{params.keys[0]} field" do
-      put :update, id: post.id, post: params
+      put :update, id: post.id, post: params, format: format || :html
       expect(post.reload.send(params.keys[0]))
       .to eq params.values[0]
+    end
+  end
+
+  shared_examples 'invalid single param update' do |params, fmt|
+    let!(:post) { create(:post) }
+    it "updates post with invalid #{params.keys[0]} field" do
+      put :update, id: post.id, post: params, format: fmt ||= :html
+      expect(post.reload.send(params.keys[0]))
+      .to eq post.send(params.keys[0])
+    end
+  end
+
+  shared_examples 'return error message' do |msg|
+    it "return error message: #{msg}" do
+      subject
+      expect(JSON.parse(response.body)['error'])
+      .to eq msg 
+    end
+  end
+
+  shared_examples 'delete post from DB' do
+    it 'deletes post from DB' do
+      expect { subject }
+      .to change(Post, :count).by(-1)
+    end
+  end
+
+  shared_examples 'redirect_to :index' do
+    it 'redirect to :index view' do
+      subject
+      expect(response).to redirect_to posts_url
     end
   end
 
@@ -115,19 +146,12 @@ describe PostsController do
 
       context 'when param is valid and post does not exist' do
         subject { get :show, id: Post.last.id + 1 }
-        it 'redirect to :index view' do
-          subject
-          expect(response).to redirect_to posts_url
-        end
+        include_examples 'redirect_to :index'
       end
 
       context 'when param is invalid' do
         subject { get :show, id: -1 }
-
-        it 'redirect to :index view' do
-          subject
-          expect(response).to redirect_to posts_url
-        end
+        include_examples 'redirect_to :index'
       end
     end
 
@@ -148,24 +172,14 @@ describe PostsController do
         subject { get :show, id: Post.last.id + 1, format: :json }
 
         include_examples 'render status code', 404 
-
-        it 'returns error message' do
-          subject
-          expect(JSON.parse(response.body)['error'])
-          .to eq 'Post not found'
-        end
+        include_examples 'return error message', 'Post not found' 
       end
 
       context 'when param is invalid' do
         subject { get :show, id: -1, format: :json }
 
         include_examples 'render status code', 404 
-
-        it 'returns error message' do
-          subject
-          expect(JSON.parse(response.body)['error'])
-          .to eq 'Post not found'
-        end
+        include_examples 'return error message', 'Post not found' 
       end
     end
   end
@@ -247,18 +261,10 @@ describe PostsController do
       end
 
       context 'when post update fail' do
+        include_examples 'invalid single param update', title: 'abc'
+        include_examples 'invalid single param update', name: nil
+
         let!(:post) { create(:post) }
-
-        it 'does not accept title less than 4 chars' do
-          put :update, id: post.id, post: { title: 'abc' }
-          expect(post.reload.title).to eq post.title
-        end
-
-        it 'does not accept nil name' do
-          put :update, id: post.id, post: { name: nil }
-          expect(post.reload.name).to eq post.name 
-        end
-
         it 're-renders edit method' do
           put :update, id: post.id, post: { title: nil, name: nil }
           expect(response).to render_template(:edit)
@@ -267,17 +273,15 @@ describe PostsController do
     end
     describe 'json format' do
       context 'when post update success' do
-        let!(:post) { create(:post) }
-
-        it 'update post title' do
-          put :update, id: post.id, post: { title: 'New title' }, format: :json
-          expect(post.reload.title).to eq 'New title'
-        end
-
-        it 'update post name' do
-          put :update, id: post.id, post: { name: 'New name' }, format: :json
-          expect(post.reload.name).to eq 'New name'
-        end
+        include_examples( 
+          'single param update', { title: 'Update title' }, format: :json
+        )
+        include_examples( 
+          'single param update', { name: 'Update name' }, format: :json
+        )
+        include_examples( 
+          'single param update', { content: 'Update content' }, format: :json
+        )
 
         it 'returns 204 status code' do
           put :update, id: post.id, format: :json
@@ -314,14 +318,8 @@ describe PostsController do
               id: Post.last.id + 1, 
               format: :json
         end
-
         include_examples 'render status code', 422
-
-        it 'returns error message' do
-          subject
-          expect(JSON.parse(response.body)['error'])
-          .to eq 'Post not found'
-        end
+        include_examples 'return error message', 'Post not found'
       end
     end
   end
@@ -331,23 +329,12 @@ describe PostsController do
       let!(:post) {create(:post)}
       context 'when param is valid and post exists' do
         subject { delete :destroy, id: post.id }
-        it 'deletes post from DB' do
-          expect { subject }
-          .to change(Post, :count).by(-1)
-        end
-
-        it 'redirects to :index' do
-          subject
-          expect(response).to redirect_to posts_url
-        end
+        include_examples 'delete post from DB'
+        include_examples 'redirect_to :index'
       end
-
       context 'when param is invalid' do
         subject { delete :destroy, id: Post.last.id + 1 }
-        it 'invalid id redirects to index' do
-          subject
-          expect(response).to redirect_to posts_url
-        end
+        include_examples 'redirect_to :index'
       end
     end
 
@@ -355,23 +342,13 @@ describe PostsController do
       let!(:post) {create(:post)}
       context 'when param is valid and post exists' do
         subject { delete :destroy, id: post.id, format: :json }
-        it 'deletes post from DB' do
-          expect { subject }
-          .to change(Post, :count).by(-1)
-        end
-
+        include_examples 'delete post from DB'
         include_examples 'render status code', 204 
       end
       context 'when param is invalid' do
         subject { delete :destroy, id: Post.last.id + 1, format: :json }
-
         include_examples 'render status code', 422 
-
-        it 'returns error message' do
-          subject
-          expect(JSON.parse(response.body)['error'])
-          .to eq 'Post not found'
-        end
+        include_examples 'return error message', 'Post not found'
       end
     end
   end
