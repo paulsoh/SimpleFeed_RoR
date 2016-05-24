@@ -139,6 +139,12 @@ describe PostsController do
           subject
           expect(response.status).to eq 404
         end
+
+        it 'returns error message' do
+          subject
+          expect(JSON.parse(response.body)['error'])
+          .to eq 'Post not found'
+        end
       end
 
       context 'when param is invalid' do
@@ -147,6 +153,12 @@ describe PostsController do
         it 'returns 404 not found' do
           subject
           expect(response.status).to eq 404
+        end
+
+        it 'returns error message' do
+          subject
+          expect(JSON.parse(response.body)['error'])
+          .to eq 'Post not found'
         end
       end
     end
@@ -277,7 +289,7 @@ describe PostsController do
         end
       end
 
-      context 'when post update fail' do
+      context 'when post update fails due to invalid params' do
         let!(:post) { create(:post) }
 
         it 'does not accept title less than 4 chars' do
@@ -290,19 +302,31 @@ describe PostsController do
           expect(post.reload.name).to eq post.name 
         end
 
-        it 'invalid params return 422 status code' do
+        it 'returns 422 status code' do
           put :update, 
               id: post.id, 
               post: { title: nil, name: nil }, 
               format: :json
           expect(response.status).to eq 422
         end
+      end
 
-        it 'invalid id returns 422 status code' do
+      context 'when post update fails due to invalid id' do
+        let!(:post) { create(:post) }
+        subject do
           put :update, 
               id: Post.last.id + 1, 
               format: :json
+        end
+        it 'returns 422 status code' do
+          subject
           expect(response.status).to eq 422
+        end
+
+        it 'returns error message' do
+          subject
+          expect(JSON.parse(response.body)['error'])
+          .to eq 'Post not found'
         end
       end
     end
@@ -332,6 +356,7 @@ describe PostsController do
         end
       end
     end
+
     describe 'json format' do
       let!(:post) {create(:post)}
       context 'when param is valid and post exists' do
@@ -351,6 +376,12 @@ describe PostsController do
         it 'invalid id returns 422 status code' do
           subject
           expect(response.status).to eq 422
+        end
+
+        it 'returns error message' do
+          subject
+          expect(JSON.parse(response.body)['error'])
+          .to eq 'Post not found'
         end
       end
     end
