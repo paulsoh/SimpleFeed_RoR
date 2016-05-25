@@ -22,10 +22,10 @@ describe PostsController do
     end
   end
 
-  shared_examples 'single param update' do |params, format|
+  shared_examples 'single param update' do |params, fmt|
     let!(:post) { create(:post) }
     it "updates post #{params.keys[0]} field" do
-      put :update, id: post.id, post: params, format: format || :html
+      put :update, id: post.id, post: params, format: fmt ||= :html
       expect(post.reload.send(params.keys[0]))
       .to eq params.values[0]
     end
@@ -78,6 +78,20 @@ describe PostsController do
     end
   end
 
+  shared_examples 'assigns post with post.id' do
+    it 'assigns post with post.id' do
+      subject
+      expect(assigns(:post).id).to eq post.id
+    end
+  end
+
+  shared_examples 'returns post with post.id' do
+    it 'returns post with post.id' do
+      subject
+      expect(JSON.parse(response.body)['id']).to eq post.id
+    end
+  end
+
   # ===============================================================
   #
   #                              TEST
@@ -122,14 +136,9 @@ describe PostsController do
       let!(:post) {create(:post)}
       context 'when param is valid and post exists' do
         subject { get :show, id: post.id }
-
         include_examples 'render status code', 200
         include_examples 'renders template', :show
-
-        it 'returns post with post.id' do
-          subject
-          expect(assigns(:post).id).to eq post.id
-        end
+        include_examples 'assigns post with post.id'
       end
 
       context 'when param is valid and post does not exist' do
@@ -147,25 +156,18 @@ describe PostsController do
       let!(:post) {create(:post)}
       context 'when param is valid and post exists' do
         subject { get :show, id: post.id, format: :json }
-
         include_examples 'render status code', 200
-
-        it 'returns post with post.id' do
-          subject
-          expect(JSON.parse(response.body)['id']).to eq post.id
-        end
+        include_examples 'returns post with post.id'
       end
 
       context 'when param is valid and post does not exist' do
         subject { get :show, id: Post.last.id + 1, format: :json }
-
         include_examples 'render status code', 404 
         include_examples 'return error message', 'Post not found' 
       end
 
       context 'when param is invalid' do
         subject { get :show, id: -1, format: :json }
-
         include_examples 'render status code', 404 
         include_examples 'return error message', 'Post not found' 
       end
@@ -176,7 +178,6 @@ describe PostsController do
     describe 'html format' do
       context 'when post create success' do
         subject { post :create, post: attributes_for(:post) }
-
         it 'create new post' do
           expect { subject }
           .to change(Post, :count).by(1)
@@ -317,12 +318,16 @@ describe PostsController do
       let!(:post) {create(:post)}
       context 'when param is valid and post exists' do
         subject { delete :destroy, id: post.id }
-        include_examples 'delete post from DB'
-        include_examples 'redirect_to :index'
+        context 'successfully delete post' do
+          include_examples 'delete post from DB'
+          include_examples 'redirect_to :index'
+        end
       end
       context 'when param is invalid' do
-        subject { delete :destroy, id: Post.last.id + 1 }
-        include_examples 'redirect_to :index'
+        context 'delete post fails' do
+          subject { delete :destroy, id: Post.last.id + 1 }
+          include_examples 'redirect_to :index'
+        end
       end
     end
 
@@ -330,13 +335,17 @@ describe PostsController do
       let!(:post) {create(:post)}
       context 'when param is valid and post exists' do
         subject { delete :destroy, id: post.id, format: :json }
-        include_examples 'delete post from DB'
-        include_examples 'render status code', 204 
+        context 'successfully delete post' do
+          include_examples 'delete post from DB'
+          include_examples 'render status code', 204 
+        end
       end
       context 'when param is invalid' do
         subject { delete :destroy, id: Post.last.id + 1, format: :json }
-        include_examples 'render status code', 422 
-        include_examples 'return error message', 'Post not found'
+        context 'delete post fails' do
+          include_examples 'render status code', 422 
+          include_examples 'return error message', 'Post not found'
+        end
       end
     end
   end
