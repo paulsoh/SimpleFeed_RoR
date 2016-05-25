@@ -92,6 +92,35 @@ describe PostsController do
     end
   end
 
+  shared_examples 'create new post to DB' do
+    it 'creates new post to DB' do
+      expect { subject }
+      .to change(Post, :count).by(1)
+    end
+  end
+
+  shared_examples 'redirect_to new post' do
+    it 'redirect_to new post' do
+      subject
+      expect(response).to redirect_to Post.last
+    end
+  end
+  
+  shared_examples 'fails to create post with invalid params' do |params, fmt|
+    it "does not create post with invalid #{params.keys[0]}" do
+      expect do
+        post :create, post: attributes_for(:post, params), format: fmt ||= :html
+      end.to_not change(Post, :count)
+    end
+
+    if fmt == :json
+      it "post with invalid #{params.keys[0]} returns status 422" do
+        post :create, post: attributes_for(:post, params), format: fmt
+        expect(response.status).to eq 422
+      end
+    end
+  end
+
   # ===============================================================
   #
   #                              TEST
@@ -178,30 +207,17 @@ describe PostsController do
     describe 'html format' do
       context 'when post create success' do
         subject { post :create, post: attributes_for(:post) }
-        it 'create new post' do
-          expect { subject }
-          .to change(Post, :count).by(1)
-        end
-
-        it 'redirect to new post' do
-          subject
-          expect(response).to redirect_to Post.last
-        end
+        include_examples 'create new post to DB'
+        include_examples 'redirect_to new post'
       end
 
       context 'when post create fails' do
-        it 'does not create post with invalid title' do
-          expect do
-            post :create, post: { title: nil }
-          end.to_not change(Post, :count)
-        end
-
-        it 'does not create post with invalid name' do
-          expect do
-            post :create, post: { name: nil }
-          end.to_not change(Post, :count)
-        end
-
+        include_examples(
+          'fails to create post with invalid params', title: 'paul'
+        )
+        include_examples(
+          'fails to create post with invalid params', name: nil
+        )
         it 're-renders new method' do
           post :create, post: { title: nil, name: nil }
           expect(response).to render_template(:new)
@@ -212,25 +228,17 @@ describe PostsController do
     describe 'json format' do
       context 'when post create success' do
         subject { post :create, post: attributes_for(:post), format: :json }
-
-        it 'create new post' do
-          expect { subject }
-          .to change(Post, :count).by(1)
-        end
-
+        include_examples 'create new post to DB'
         include_examples 'render status code', 201
       end
 
       context 'when post create fails' do
-        it 'post with invalid title returns status 422' do
-          post :create, post: { title: nil }, format: :json
-          expect(response.status).to eq 422
-        end
-
-        it 'post with invalid name returns status 422' do
-          post :create, post: { name: nil }, format: :json
-          expect(response.status).to eq 422
-        end
+        include_examples(
+          'fails to create post with invalid params', { title: 'paul' }, :json
+        )
+        include_examples(
+          'fails to create post with invalid params', { name: nil }, :json
+        )
       end
     end
   end
