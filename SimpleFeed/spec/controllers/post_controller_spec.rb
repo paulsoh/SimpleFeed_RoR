@@ -62,6 +62,22 @@ describe PostsController do
     end
   end
 
+  shared_examples 'assigns list of posts' do |n|
+    let!(:post_list) { create_list :post, n }
+    it "assigns list of #{n} post(s)" do
+      subject
+      expect(assigns(:posts)).to eq(post_list)
+    end
+  end
+
+  shared_examples 'returns list of posts' do |n|
+    let!(:post_list) { create_list :post, n }
+    it "response returns #{n} post(s)" do
+      subject
+      expect(response.body).to eq(post_list.to_json)
+    end
+  end
+
   # ===============================================================
   #
   #                              TEST
@@ -71,60 +87,32 @@ describe PostsController do
   describe '#index' do
     describe 'html format' do
       subject { get :index }
-
       include_examples 'render status code', 200
       include_examples 'renders template', :index
 
-      context 'when more than one post' do
-        let!(:post_list) { create_list :post, 3 }
-        it 'returns an list of posts' do
-          subject
-          expect(assigns(:posts)).to eq(post_list)
-        end
+      context 'when there is more than one posts' do
+        include_examples 'assigns list of posts', 3
       end
-
       context 'when there is one post' do
-        let!(:post) { create(:post) }
-        it 'returns one post' do
-          subject
-          expect(assigns(:posts)).to eq([post])
-        end
+        include_examples 'assigns list of posts', 1 
       end
-
-      context 'when there are no posts' do
-        it 'returns empty list(no post)' do
-          subject
-          expect(assigns(:posts)).to be_empty 
-        end
+      context 'when there is no posts' do
+        include_examples 'assigns list of posts', 0 
       end
     end
 
     describe 'json format' do
       subject { get :index, format: :json }
-
       include_examples 'render status code', 200
 
-      context 'when more than one post' do
-        let!(:post_list) { create_list :post, 3 }
-        it 'returns an list of posts' do
-          subject
-          expect(JSON.parse(response.body).length).to eq post_list.length
-        end
+      context 'when there is more than one post' do
+        include_examples 'returns list of posts', 3 
       end
-
       context 'when there is one post' do
-        let!(:post) { create(:post) }
-        it 'returns one post' do
-          subject
-          expect(JSON.parse(response.body).length).to eq [post].length
-        end
+        include_examples 'returns list of posts', 1 
       end
-
       context 'when there are no posts' do
-        it 'returns empty list(no post)' do
-          subject
-          expect(JSON.parse(response.body).length).to eq 0 
-        end
+        include_examples 'returns list of posts', 0
       end
     end
   end
