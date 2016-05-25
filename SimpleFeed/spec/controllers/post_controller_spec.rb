@@ -29,6 +29,33 @@ describe PostsController do
       expect(post.reload.send(params.keys[0]))
       .to eq params.values[0]
     end
+
+    if fmt == :json
+      it 'returns 204 status code' do
+        put :update, id: post.id, post: params, format: fmt
+        expect(response.status).to eq 204
+      end
+    else
+      it 'redirects to updated post' do
+        put :update, id: post.id, post: params
+        expect(response).to redirect_to(:post)
+      end
+    end
+  end
+
+  shared_examples 'fails to create post with invalid params' do |params, fmt|
+    it "does not create post with invalid #{params.keys[0]}" do
+      expect do
+        post :create, post: attributes_for(:post, params), format: fmt ||= :html
+      end.to_not change(post, :count)
+    end
+
+    if fmt == :json
+      it "post with invalid #{params.keys[0]} returns status 422" do
+        post :create, post: attributes_for(:post, params), format: fmt
+        expect(response.status).to eq 422
+      end
+    end
   end
 
   shared_examples 'invalid single param update' do |params, fmt|
@@ -37,6 +64,18 @@ describe PostsController do
       put :update, id: post.id, post: params, format: fmt ||= :html
       expect(post.reload.send(params.keys[0]))
       .to eq post.send(params.keys[0])
+    end
+
+    if fmt == :json
+      it "update with invalid #{params.keys[0]} returns 422 status code" do
+        put :update, id: post.id, post: params, format: fmt
+        expect(response.status).to eq 422
+      end
+    else
+      it "update with invalid #{params.keys[0]} re-renders edit view" do
+        put :update, id: post.id, post: params, format: fmt
+        expect(response).to render_template(:edit)
+      end
     end
   end
 
@@ -249,74 +288,38 @@ describe PostsController do
         include_examples 'single param update', title: 'Update title'
         include_examples 'single param update', name: 'Update name'  
         include_examples 'single param update', content: 'Update content'
-
-        let!(:post) { create(:post) }
-        it 'redirects to updated post' do
-          put :update, id: post.id
-          expect(response).to redirect_to(:post)
-        end
       end
 
-      context 'when post update fail' do
+      context 'when post update fails' do
         include_examples 'invalid single param update', title: 'abc'
         include_examples 'invalid single param update', name: nil
-
-        let!(:post) { create(:post) }
-        it 're-renders edit method' do
-          put :update, id: post.id, post: { title: nil, name: nil }
-          expect(response).to render_template(:edit)
-        end
       end
     end
     describe 'json format' do
       context 'when post update success' do
         include_examples( 
-          'single param update', { title: 'Update title' }, format: :json
+          'single param update', { title: 'Update title' }, :json
         )
         include_examples( 
-          'single param update', { name: 'Update name' }, format: :json
+          'single param update', { name: 'Update name' }, :json
         )
         include_examples( 
-          'single param update', { content: 'Update content' }, format: :json
+          'single param update', { content: 'Update content' }, :json
         )
-
-        it 'returns 204 status code' do
-          put :update, id: post.id, format: :json
-          expect(response.status).to eq 204
-        end
       end
 
-      context 'when post update fails due to invalid params' do
-        let!(:post) { create(:post) }
-
-        it 'does not accept title less than 4 chars' do
-          put :update, id: post.id, post: { title: 'abc' }, format: :json
-          expect(post.reload.title).to eq post.title
+      context 'when post update fails' do
+        context 'due to invalid params' do
+          include_examples 'invalid single param update', { title: 'ab' }, :json
+          include_examples 'invalid single param update', { name: nil }, :json
         end
 
-        it 'does not accept nil name' do
-          put :update, id: post.id, post: { name: nil }, format: :json
-          expect(post.reload.name).to eq post.name 
+        context 'due to invalid id' do
+          let!(:post) { create(:post) }
+          subject { put :update, id: Post.last.id + 1, format: :json }
+          include_examples 'render status code', 422
+          include_examples 'return error message', 'Post not found'
         end
-
-        it 'returns 422 status code' do
-          put :update, 
-              id: post.id, 
-              post: { title: nil, name: nil }, 
-              format: :json
-          expect(response.status).to eq 422
-        end
-      end
-
-      context 'when post update fails due to invalid id' do
-        let!(:post) { create(:post) }
-        subject do
-          put :update, 
-              id: Post.last.id + 1, 
-              format: :json
-        end
-        include_examples 'render status code', 422
-        include_examples 'return error message', 'Post not found'
       end
     end
   end
