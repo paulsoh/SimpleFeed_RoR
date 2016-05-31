@@ -15,11 +15,12 @@ class Post < ActiveRecord::Base
                                 reject_if: proc { |attrs| attrs.all? {|_k, v| v.blank? } }
 
   validate :validate_post_title
-  validate :validate_non_duplicated_post
+#  validate :validate_non_duplicated_post
 
   private
 
   def validate_post_title
+    return if title.blank?
     invalid_words = %w(광고 도박 무료 혜택 충전 성인) 
     words = []
     invalid_words.each { |word| words << word unless title.match(word).blank? }

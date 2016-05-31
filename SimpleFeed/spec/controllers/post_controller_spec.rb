@@ -317,7 +317,7 @@ describe PostsController do
         context 'due to invalid id' do
           let!(:post) { create(:post) }
           subject { put :update, id: Post.last.id + 1, format: :json }
-          include_examples 'render status code', 422
+          include_examples 'render status code', 404
           include_examples 'return error message', 'Post not found'
         end
       end
@@ -354,7 +354,7 @@ describe PostsController do
       context 'when param is invalid' do
         subject { delete :destroy, id: Post.last.id + 1, format: :json }
         context 'delete post fails' do
-          include_examples 'render status code', 422 
+          include_examples 'render status code', 404 
           include_examples 'return error message', 'Post not found'
         end
       end
