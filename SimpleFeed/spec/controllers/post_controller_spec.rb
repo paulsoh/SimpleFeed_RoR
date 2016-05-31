@@ -8,20 +8,6 @@ describe PostsController do
   #
   # =============================================================== 
 
-  shared_examples 'render status code' do |http_status_code|
-    it "renders #{http_status_code} status code" do
-      subject
-      expect(response).to have_http_status(http_status_code)
-    end
-  end
-
-  shared_examples 'renders template' do |name|
-    it "renders #{name} template" do
-      subject
-      expect(response).to render_template(name)
-    end
-  end
-
   shared_examples 'single param update' do |params, fmt|
     let!(:post) { create(:post) }
     it "updates post #{params.keys[0]} field" do
@@ -82,7 +68,7 @@ describe PostsController do
   shared_examples 'return error message' do |msg|
     it "return error message: #{msg}" do
       subject
-      expect(JSON.parse(response.body)['error'])
+      expect(json['error'])
       .to eq msg 
     end
   end
@@ -127,7 +113,7 @@ describe PostsController do
   shared_examples 'returns post with post.id' do
     it 'returns post with post.id' do
       subject
-      expect(JSON.parse(response.body)['id']).to eq post.id
+      expect(json['id']).to eq post.id
     end
   end
 
@@ -167,9 +153,9 @@ describe PostsController do
   # ===============================================================
 
   describe '#index' do
-    describe 'html format' do
+    context 'with html request' do
       subject { get :index }
-      include_examples 'render status code', 200
+      include_examples 'renders 200 http status code'
       include_examples 'renders template', :index
 
       context 'when there is more than one posts' do
@@ -183,9 +169,9 @@ describe PostsController do
       end
     end
 
-    describe 'json format' do
+    context 'with json request' do
       subject { get :index, format: :json }
-      include_examples 'render status code', 200
+      include_examples 'renders 200 http status code'
 
       context 'when there is more than one post' do
         include_examples 'returns list of posts', 3 
@@ -204,7 +190,7 @@ describe PostsController do
       let!(:post) {create(:post)}
       context 'when param is valid and post exists' do
         subject { get :show, id: post.id }
-        include_examples 'render status code', 200
+        include_examples 'renders 200 http status code'
         include_examples 'renders template', :show
         include_examples 'assigns post with post.id'
       end
@@ -224,19 +210,19 @@ describe PostsController do
       let!(:post) {create(:post)}
       context 'when param is valid and post exists' do
         subject { get :show, id: post.id, format: :json }
-        include_examples 'render status code', 200
+        include_examples 'renders 200 http status code'
         include_examples 'returns post with post.id'
       end
 
       context 'when param is valid and post does not exist' do
         subject { get :show, id: Post.last.id + 1, format: :json }
-        include_examples 'render status code', 404 
+        include_examples 'renders 404 http status code'
         include_examples 'return error message', 'Post not found' 
       end
 
       context 'when param is invalid' do
         subject { get :show, id: -1, format: :json }
-        include_examples 'render status code', 404 
+        include_examples 'renders 404 http status code'
         include_examples 'return error message', 'Post not found' 
       end
     end
@@ -268,7 +254,7 @@ describe PostsController do
       context 'when post create success' do
         subject { post :create, post: attributes_for(:post), format: :json }
         include_examples 'create new post to DB'
-        include_examples 'render status code', 201
+        include_examples 'renders 201 http status code'
       end
 
       context 'when post create fails' do
@@ -317,7 +303,7 @@ describe PostsController do
         context 'due to invalid id' do
           let!(:post) { create(:post) }
           subject { put :update, id: Post.last.id + 1, format: :json }
-          include_examples 'render status code', 404
+          include_examples 'renders 404 http status code'
           include_examples 'return error message', 'Post not found'
         end
       end
@@ -348,13 +334,13 @@ describe PostsController do
         subject { delete :destroy, id: post.id, format: :json }
         context 'successfully delete post' do
           include_examples 'delete post from DB'
-          include_examples 'render status code', 204 
+          include_examples 'renders 204 http status code'
         end
       end
       context 'when param is invalid' do
         subject { delete :destroy, id: Post.last.id + 1, format: :json }
         context 'delete post fails' do
-          include_examples 'render status code', 404 
+          include_examples 'renders 404 http status code'
           include_examples 'return error message', 'Post not found'
         end
       end
