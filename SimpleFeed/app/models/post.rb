@@ -15,7 +15,7 @@ class Post < ActiveRecord::Base
                                 reject_if: proc { |attrs| attrs.all? {|_k, v| v.blank? } }
 
   validate :validate_post_title
-#  validate :validate_non_duplicated_post
+  validate :validate_non_duplicated_post
 
   private
 
@@ -39,10 +39,12 @@ class Post < ActiveRecord::Base
   end
 
   def last_post_name
+    return if Post.all.blank?
     Post.last.name
   end
 
   def last_post_title
+    return if Post.all.blank?
     Post.last.title
   end
 end
