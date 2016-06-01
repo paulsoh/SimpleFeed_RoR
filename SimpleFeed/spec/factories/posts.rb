@@ -3,8 +3,8 @@
 
 FactoryGirl.define do
   factory :post do
-    title { 'New title' } 
-    name { 'New name' }
+    sequence(:title) { |n| "New title#{n}" } 
+    sequence(:name) { |n| "New name#{n}" } 
     url { 'http://test.com/' }
     content { 'Content' }
   end

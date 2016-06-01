@@ -15,7 +15,7 @@ class Post < ActiveRecord::Base
                                 reject_if: proc { |attrs| attrs.all? {|_k, v| v.blank? } }
 
   validate :validate_post_title
-  validate :validate_non_duplicated_post
+  validate :validate_non_duplicated_post, on: :create
 
   private
 
@@ -29,13 +29,8 @@ class Post < ActiveRecord::Base
   end
 
   def validate_non_duplicated_post
-    if title == last_post_title
-      errors.add(:title, 
-                 'Identical title to last post')
-    elsif name == last_post_name 
-      errors.add(:name, 
-                 'Identical name to last post')
-    end
+    errors.add(:title, 'identical to last post') if title == last_post_title 
+    errors.add(:name, 'identical to last post') if name == last_post_name 
   end
 
   def last_post_name

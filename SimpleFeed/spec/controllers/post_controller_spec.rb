@@ -199,6 +199,23 @@ describe PostsController do
           subject { post :create, post: attributes_for(:post, :invalid_title) }
           include_examples 'fails to create with invalid params'
         end
+        context 'when title or name is identical to previous post' do
+          let!(:posts) {create(:post)}
+          subject do 
+            post :create, post: { title: Post.last.title, name: Post.last.name }
+          end
+          include_examples 'fails to create with invalid params'
+          it 'duplicated title returns custom error message' do
+            subject
+            expect(assigns['post'].errors.full_messages)
+            .to include('Title identical to last post')
+          end
+          it 'duplicated name returns custom error message' do
+            subject
+            expect(assigns['post'].errors.full_messages)
+            .to include('Name identical to last post')
+          end
+        end
         
         it 're-renders new method' do
           post :create, attributes_for(:post, :invalid_post)
@@ -239,6 +256,23 @@ describe PostsController do
           end
           include_examples 'fails to create with invalid params'
         end
+        context 'when title or name is identical to previous post' do
+          let!(:posts) {create(:post)}
+          subject do 
+            post :create, 
+                 post: { title: Post.last.title, name: Post.last.name },
+                 format: :json
+          end
+          include_examples 'fails to create with invalid params'
+          it 'duplicated title returns custom error message' do
+            subject
+            expect(json['title']).to include 'identical to last post'
+          end
+          it 'duplicated name returns custom error message' do
+            subject
+            expect(json['name']).to include 'identical to last post'
+          end
+        end
         it 'returns 422 http status code ' do
           post :create, 
                post: attributes_for(:post, :invalid_post), 
@@ -253,20 +287,18 @@ describe PostsController do
     context 'with html request' do
       let(:post) { create :post }
       context 'when post update params are valid' do
-        context 'with title field update' do
-          subject do
-            put :update, id: post.id, post: { title: 'Update' }, format: :html
-          end
-          include_examples 'single field update', title: 'Update'
+        subject do
+          put :update, 
+              id: post.id, 
+              post: { title: 'Update', name: 'Update' }, 
+              format: :html
         end
-        context 'with name field update' do
-          subject do
-            put :update, id: post.id, post: { name: 'Update' }, format: :html
-          end
+        context 'with title and name field update' do
+          include_examples 'single field update', title: 'Update'
           include_examples 'single field update', name: 'Update'
         end
         it 'redirects do updated post' do
-          put :update, id: post.id, post: { name: 'Update' }, format: :html
+          subject
           expect(response).to redirect_to :post
         end
       end
@@ -298,20 +330,21 @@ describe PostsController do
     context 'with json request' do
       let(:post) { create :post }
       context 'when post update params are valid' do
-        context 'with title field update' do
+        context 'with title and name field update' do
           subject do
-            put :update, id: post.id, post: { title: 'Update' }, format: :json
+            put :update, 
+                id: post.id, 
+                post: { title: 'Update', name: 'Update' }, 
+                format: :json
           end
           include_examples 'single field update', title: 'Update'
-        end
-        context 'with name field update' do
-          subject do
-            put :update, id: post.id, post: { name: 'Update' }, format: :json
-          end
           include_examples 'single field update', name: 'Update'
         end
         it 'returns 204 http status code ' do
-          put :update, id: post.id, post: { name: 'Update' }, format: :json
+          put :update, 
+              id: post.id, 
+              post: { title: 'Update', name: 'Update' }, 
+              format: :json
           expect(response).to have_http_status 204 
         end
       end
