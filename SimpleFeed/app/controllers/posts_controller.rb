@@ -1,11 +1,11 @@
 # The Post Controller
 class PostsController < ApplicationController
-  before_filter -> { find_post(:id) }, only: [:show, 
-                                              :edit, 
+  before_filter -> { find_post(:id) }, only: [:edit, 
                                               :update, 
                                               :destroy]
 
-  before_filter -> { find_posts_by_keyword }, only: :search 
+  before_filter :find_with_comments, only: :show
+  before_filter :find_posts_by_keyword, only: :search 
 
   def index
     @posts = Post.all
@@ -87,5 +87,17 @@ class PostsController < ApplicationController
   
   def find_posts_by_keyword
     @posts = Post.where('title LIKE ?', "%#{params[:keyword]}%").all 
+  end
+
+  def find_with_comments
+    @post = Post.includes(:comments).find_by_id(params[:id])
+    if @post.blank?
+      respond_to do |format|
+        format.html { redirect_to posts_url }
+        format.json do 
+          render json: { error: 'Post not found' }, status: :not_found
+        end
+      end
+    end
   end
 end
