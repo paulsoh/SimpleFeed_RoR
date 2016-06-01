@@ -41,18 +41,9 @@ describe PostsController do
     end
   end
 
-  shared_examples 'fails to create with invalid params' do |params, fmt|
-    it "does not create post with invalid #{params.keys[0]}" do
-      expect do
-        post :create, post: attributes_for(:post, params), format: fmt ||= :html
-      end.to_not change(post, :count)
-    end
-
-    if fmt == :json
-      it "post with invalid #{params.keys[0]} returns status 422" do
-        post :create, post: attributes_for(:post, params), format: fmt
-        expect(response.status).to eq 422
-      end
+  shared_examples 'fails to create with invalid params' do
+    it 'does not create post with invalid field' do
+      expect { subject }.to change(Post, :count).by(0)
     end
   end
 
@@ -106,21 +97,6 @@ describe PostsController do
     end
   end
   
-  shared_examples 'fails to create post with invalid params' do |params, fmt|
-    it "does not create post with invalid #{params.keys[0]}" do
-      expect do
-        post :create, post: attributes_for(:post, params), format: fmt ||= :html
-      end.to_not change(Post, :count)
-    end
-
-    if fmt == :json
-      it "post with invalid #{params.keys[0]} returns status 422" do
-        post :create, post: attributes_for(:post, params), format: fmt
-        expect(response.status).to eq 422
-      end
-    end
-  end
-
   # ===============================================================
   #
   #                              TEST
@@ -206,37 +182,70 @@ describe PostsController do
   describe '#create' do
     context 'with html request' do
       context 'when post create succeeds' do
-        subject { post :create, attributes_for(:post) }
+        subject { post :create, post: attributes_for(:post) }
         include_examples 'create new post to DB'
         include_examples 'redirect_to new post'
       end
 
       context 'when post create fails' do
-        include_examples 'fails to create with invalid params', title: 'a' 
-        include_examples 'fails to create with invalid params', name: nil
-        include_examples 'fails to create with invalid params', title: '광고' 
+        context 'with invalid title length' do
+          subject { post :create, post: attributes_for(:post, :short_title) }
+          include_examples 'fails to create with invalid params'
+        end
+        context 'with blank name field' do
+          subject { post :create, post: attributes_for(:post, :invalid_name) }
+          include_examples 'fails to create with invalid params'
+        end
+        context 'with invalid keywords in title field' do
+          subject { post :create, post: attributes_for(:post, :invalid_title) }
+          include_examples 'fails to create with invalid params'
+        end
         
         it 're-renders new method' do
-          post :create, post: { title: nil, name: nil }
+          post :create, attributes_for(:post, :invalid_post)
           expect(response).to render_template(:new)
         end
       end
     end
 
     context 'with json request' do
-      context 'when post create success' do
+      context 'when post create succeeds' do
         subject { post :create, post: attributes_for(:post), format: :json }
         include_examples 'create new post to DB'
         include_examples 'renders 201 http status code'
       end
 
       context 'when post create fails' do
-        include_examples(
-          'fails to create with invalid params', { title: 'paul' }, :json
-        )
-        include_examples(
-          'fails to create with invalid params', { name: nil }, :json
-        )
+        context 'with invalid title length' do
+          subject do 
+            post :create, 
+                 post: attributes_for(:post, :short_title), 
+                 format: :json
+          end
+          include_examples 'fails to create with invalid params'
+        end
+        context 'with blank name field' do
+          subject do 
+            post :create, 
+                 post: attributes_for(:post, :invalid_name), 
+                 format: :json
+          end
+          include_examples 'fails to create with invalid params'
+        end
+        context 'with invalid keywords in title field' do
+          subject do 
+            post :create, 
+                 post: attributes_for(:post, :invalid_title), 
+                 format: :json
+          end
+          include_examples 'fails to create with invalid params'
+        end
+        it 'returns 422 http status code ' do
+          post :create, 
+               post: attributes_for(:post, :invalid_post), 
+               format: :json
+          expect(response).to have_http_status 422 
+        end
       end
     end
   end
@@ -263,7 +272,7 @@ describe PostsController do
         end
       end
       context 'when post update params are invalid' do
-        context 'with invalid title field update' do
+        context 'with invalid title length update' do
           subject do
             put :update, id: post.id, post: { title: 'abc' }, format: :html
           end
@@ -275,7 +284,7 @@ describe PostsController do
           end
           include_examples 'invalid single field update', title: '광고'
         end
-        context 'with invalid name field update' do
+        context 'with blank name field update' do
           subject do
             put :update, id: post.id, post: { name: nil }, format: :html
           end
@@ -308,7 +317,7 @@ describe PostsController do
         end
       end
       context 'when post update params are invalid' do
-        context 'with invalid title field update' do
+        context 'with invalid title length update' do
           subject do
             put :update, id: post.id, post: { title: 'abc' }, format: :json
           end
@@ -320,7 +329,7 @@ describe PostsController do
           end
           include_examples 'invalid single field update', title: '광고'
         end
-        context 'with invalid name field update' do
+        context 'with blank name field update' do
           subject do
             put :update, id: post.id, post: { name: nil }, format: :json
           end

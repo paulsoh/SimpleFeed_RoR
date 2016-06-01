@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 # Read about factories at https://github.com/thoughtbot/factory_girl
 
 FactoryGirl.define do
@@ -11,11 +12,17 @@ FactoryGirl.define do
   trait :invalid_post do
     title nil
     name nil
-    url nil
-    content nil
   end
 
-  trait :invalid_url do
-    url 'invalid_url'
+  trait :invalid_name do
+    name nil
+  end
+
+  trait :short_title do
+    title 'abc'
+  end
+
+  trait :invalid_title do
+    title '광고'
   end
 end
