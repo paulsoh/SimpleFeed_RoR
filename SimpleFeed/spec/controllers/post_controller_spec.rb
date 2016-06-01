@@ -62,8 +62,8 @@ describe PostsController do
     end
   end
 
-  shared_examples 'redirect_to :index' do
-    it 'redirect to :index view' do
+  shared_examples 'redirect_to index' do
+    it 'redirect to index view' do
       subject
       expect(response).to redirect_to posts_url
     end
@@ -137,8 +137,8 @@ describe PostsController do
   end
 
   describe '#show' do
+    let!(:post) {create(:post)}
     context 'with html request' do
-      let!(:post) {create(:post)}
       context 'when param is valid and post exists' do
         subject { get :show, id: post.id }
         include_examples 'renders 200 http status code'
@@ -148,17 +148,16 @@ describe PostsController do
 
       context 'when param is valid and post does not exist' do
         subject { get :show, id: Post.last.id + 1 }
-        include_examples 'redirect_to :index'
+        include_examples 'redirect_to index'
       end
 
       context 'when param is invalid' do
         subject { get :show, id: -1 }
-        include_examples 'redirect_to :index'
+        include_examples 'redirect_to index'
       end
     end
 
     context 'with json request' do
-      let!(:post) {create(:post)}
       context 'when param is valid and post exists' do
         subject { get :show, id: post.id, format: :json }
         include_examples 'renders 200 http status code'
@@ -350,13 +349,13 @@ describe PostsController do
         subject { delete :destroy, id: post.id }
         context 'successfully delete post' do
           include_examples 'delete post from DB'
-          include_examples 'redirect_to :index'
+          include_examples 'redirect_to index'
         end
       end
       context 'when param is invalid' do
         subject { delete :destroy, id: Post.last.id + 1 }
         context 'delete post fails and redirects to index' do
-          include_examples 'redirect_to :index'
+          include_examples 'redirect_to index'
         end
       end
     end
