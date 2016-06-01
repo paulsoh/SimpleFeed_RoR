@@ -410,4 +410,37 @@ describe PostsController do
       end
     end
   end
+
+  describe '#search' do
+    let!(:posts) {create_list :post, 5}
+    let!(:unique_post) {create :post, :unique_post}
+    context 'when there is more than one result' do
+      include_examples 'renders 200 http status code'
+      context 'when there is one result' do
+        subject { get :search, keyword: 'Unique' }
+        it 'returns 1 search result' do
+          subject
+          expect(assigns['posts']).to eq [unique_post]
+        end
+        include_examples 'renders template', :search
+      end
+      context 'when there is more than one result' do
+        subject { get :search, keyword: 'title' }
+        it 'returns 5 search result' do
+          subject
+          expect(assigns['posts']).to eq posts
+        end
+        include_examples 'renders template', :search
+      end
+    end
+    context 'when there are no results' do
+      include_examples 'renders 200 http status code'
+      subject { get :search, keyword: '1VS5d1D3' }
+      it 'returns empty search result' do
+        subject
+        expect(assigns['posts']).to eq []
+      end
+      include_examples 'renders template', :search
+    end
+  end
 end

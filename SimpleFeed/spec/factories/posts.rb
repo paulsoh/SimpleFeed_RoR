@@ -25,4 +25,9 @@ FactoryGirl.define do
   trait :invalid_title do
     title '광고'
   end
+
+  trait :unique_post do
+    title 'Unique'
+    name 'Bye bye'
+  end
 end
