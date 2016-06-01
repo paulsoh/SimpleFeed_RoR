@@ -15,6 +15,11 @@ class CommentsController < ApplicationController
   private
 
   def find_comment
-    @comment = @post.comments.find(params[:id])
+    @comment = @post.comments.find_by_id(params[:id])
+    if @comment.blank?
+      respond_to do |format|
+        format.html { redirect_to @post }
+      end
+    end
   end
 end

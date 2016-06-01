@@ -32,3 +32,10 @@ shared_examples 'renders 404 http status code' do
     expect(response).to have_http_status(404)
   end
 end
+
+shared_examples 'renders 302 http status code' do
+  it 'renders 302 http status code' do
+    subject
+    expect(response).to have_http_status(302)
+  end
+end
