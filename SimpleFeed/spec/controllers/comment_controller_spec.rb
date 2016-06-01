@@ -17,6 +17,32 @@ describe CommentsController do
   end
 
   describe '#create' do
+    context 'with invalid fields' do
+      context 'validation fails' do
+        it 'commenter is not present' do
+        end
+        it 'body is not present' do
+        end
+        it 'body is too short' do
+        end
+        it 'body is too long' do
+        end
+        it 'same commenter writes two in a row' do
+        end
+        it 'same body is written twice in a row' do
+        end
+      end
+      it 'post.comments does not change' do
+      end
+      it 'redirect to post show view' do
+      end
+    end
+    context 'valid field' do
+      it 'comment is stored in post.comments' do
+      end
+      it 'redirect to post show view' do
+      end
+    end
   end
 
   describe '#delete' do
