@@ -247,49 +247,42 @@ describe PostsController do
       context 'when post update params are valid' do
         context 'with title field update' do
           subject do
-            put :update, id: post.id, 
-                post: { title: 'Update title' }, format: :html
+            put :update, id: post.id, post: { title: 'Update' }, format: :html
           end
-          include_examples 'single field update', { title: 'Update title' }
+          include_examples 'single field update', title: 'Update'
         end
         context 'with name field update' do
           subject do
-            put :update, id: post.id, 
-                post: { name: 'Update name' }, format: :html
+            put :update, id: post.id, post: { name: 'Update' }, format: :html
           end
-          include_examples 'single field update', { name: 'Update name' }
+          include_examples 'single field update', name: 'Update'
         end
         it 'redirects do updated post' do
-          put :update, id: post.id, 
-              post: { name: 'Update name' }, format: :html
+          put :update, id: post.id, post: { name: 'Update' }, format: :html
           expect(response).to redirect_to :post
         end
       end
       context 'when post update params are invalid' do
         context 'with invalid title field update' do
           subject do
-            put :update, id: post.id, 
-                post: { title: 'abc' }, format: :html
+            put :update, id: post.id, post: { title: 'abc' }, format: :html
           end
-          include_examples 'invalid single field update', { title: 'abc' }
+          include_examples 'invalid single field update', title: 'abc'
         end
         context 'with invalid title keyword update' do
           subject do
-            put :update, id: post.id, 
-                post: { title: '광고' }, format: :html
+            put :update, id: post.id, post: { title: '광고' }, format: :html
           end
-          include_examples 'invalid single field update', { title: '광고' }
+          include_examples 'invalid single field update', title: '광고'
         end
         context 'with invalid name field update' do
           subject do
-            put :update, id: post.id, 
-                post: { name: nil }, format: :html
+            put :update, id: post.id, post: { name: nil }, format: :html
           end
-          include_examples 'invalid single field update', { name: nil }
+          include_examples 'invalid single field update', name: nil
         end
         it 'redirects do edit view' do
-          put :update, id: post.id, 
-              post: { title: 'abc' }, format: :html
+          put :update, id: post.id, post: { title: 'abc' }, format: :html
           expect(response).to render_template(:edit)
         end
       end
@@ -299,49 +292,42 @@ describe PostsController do
       context 'when post update params are valid' do
         context 'with title field update' do
           subject do
-            put :update, id: post.id, 
-                post: { title: 'Update title' }, format: :json
+            put :update, id: post.id, post: { title: 'Update' }, format: :json
           end
-          include_examples 'single field update', { title: 'Update title' }
+          include_examples 'single field update', title: 'Update'
         end
         context 'with name field update' do
           subject do
-            put :update, id: post.id, 
-                post: { name: 'Update name' }, format: :json
+            put :update, id: post.id, post: { name: 'Update' }, format: :json
           end
-          include_examples 'single field update', { name: 'Update name' }
+          include_examples 'single field update', name: 'Update'
         end
         it 'returns 204 http status code ' do
-          put :update, id: post.id, 
-              post: { name: 'Update name' }, format: :json
+          put :update, id: post.id, post: { name: 'Update' }, format: :json
           expect(response).to have_http_status 204 
         end
       end
       context 'when post update params are invalid' do
         context 'with invalid title field update' do
           subject do
-            put :update, id: post.id, 
-                post: { title: 'abc' }, format: :json
+            put :update, id: post.id, post: { title: 'abc' }, format: :json
           end
-          include_examples 'invalid single field update', { title: 'abc' }
+          include_examples 'invalid single field update', title: 'abc'
         end
         context 'with invalid title keyword update' do
           subject do
-            put :update, id: post.id, 
-                post: { title: '광고' }, format: :json
+            put :update, id: post.id, post: { title: '광고' }, format: :json
           end
-          include_examples 'invalid single field update', { title: '광고' }
+          include_examples 'invalid single field update', title: '광고'
         end
         context 'with invalid name field update' do
           subject do
-            put :update, id: post.id, 
-                post: { name: nil }, format: :json
+            put :update, id: post.id, post: { name: nil }, format: :json
           end
-          include_examples 'invalid single field update', { name: nil }
+          include_examples 'invalid single field update', name: nil
         end
         it 'returns 422 http status code ' do
-          put :update, id: post.id, 
-              post: { title: '광고' }, format: :json
+          put :update, id: post.id, post: { title: '광고' }, format: :json
           expect(response).to have_http_status 422 
         end
       end
@@ -349,8 +335,8 @@ describe PostsController do
   end
 
   describe '#delete' do
-    describe 'html format' do
-      let!(:post) {create(:post)}
+    let!(:post) {create(:post)}
+    context 'with html request' do
       context 'when param is valid and post exists' do
         subject { delete :destroy, id: post.id }
         context 'successfully delete post' do
@@ -359,15 +345,14 @@ describe PostsController do
         end
       end
       context 'when param is invalid' do
-        context 'delete post fails' do
-          subject { delete :destroy, id: Post.last.id + 1 }
+        subject { delete :destroy, id: Post.last.id + 1 }
+        context 'delete post fails and redirects to index' do
           include_examples 'redirect_to :index'
         end
       end
     end
 
-    describe 'json format' do
-      let!(:post) {create(:post)}
+    context 'with json request' do
       context 'when param is valid and post exists' do
         subject { delete :destroy, id: post.id, format: :json }
         context 'successfully delete post' do
