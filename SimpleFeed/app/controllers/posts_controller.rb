@@ -5,6 +5,8 @@ class PostsController < ApplicationController
                                               :update, 
                                               :destroy]
 
+  before_filter -> { find_posts_by_keyword }, only: :search 
+
   def index
     @posts = Post.all
 
@@ -74,12 +76,16 @@ class PostsController < ApplicationController
       format.json { head :no_content }
     end
   end
-  #def search
-  #  @posts = Post.all
 
-  #  respond_to do |format|
-  #    format.html # index.html.erb
-  #    format.json { render json: @posts }
-  #  end
-  #end
+  def search
+    respond_to do |format|
+      format.json { render json: @posts }
+    end
+  end
+
+  private
+  
+  def find_posts_by_keyword
+    @posts = Post.where('title LIKE ?', "%#{params[:keyword]}%").all 
+  end
 end
