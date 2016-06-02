@@ -14,7 +14,14 @@ describe CommentsController do
       expect{ subject }.to change(Comment, :count).by(0)
     end
   end
-  
+
+  shared_examples 'flashs error message on post view' do |msg|
+    it 'flashs error message on post view' do
+      subject
+      expect(flash[:errors]).to include(msg)
+    end
+  end
+
   # ===============================================================
   #
   #                         SHARED EXAMPLES
@@ -43,6 +50,7 @@ describe CommentsController do
                comment: attributes_for(:comment, :no_commenter)
         end
         include_examples 'fails to create with invalid fields'
+        include_examples 'flashs error message on post view', "Commenter can't be blank"
       end
       context 'when body is not present' do
         subject do 
@@ -51,6 +59,7 @@ describe CommentsController do
                comment: attributes_for(:comment, :no_body)
         end
         include_examples 'fails to create with invalid fields'
+        include_examples 'flashs error message on post view', "Body can't be blank"
       end
       context 'when body is too short' do
         subject do 
@@ -59,6 +68,7 @@ describe CommentsController do
                comment: attributes_for(:comment, :short_body)
         end
         include_examples 'fails to create with invalid fields'
+        include_examples 'flashs error message on post view', "Body is too short (minimum is 5 characters)"
       end
       context 'when body is too long' do
         subject do 
@@ -67,6 +77,7 @@ describe CommentsController do
                comment: attributes_for(:comment, :long_body)
         end
         include_examples 'fails to create with invalid fields'
+        include_examples 'flashs error message on post view', "Body is too long (maximum is 140 characters)"
       end
       context 'when comment is identical to previous comment' do
         let!(:comment) {create(:comment, post: test_post)}
@@ -76,16 +87,8 @@ describe CommentsController do
                comment: { commenter: comment.commenter,
                           body: comment.body }
         end
-        it 'raises error on identical commenter' do
-          subject
-          expect(assigns['comment'].errors.full_messages)
-          .to include('Commenter identical to last commenter')
-        end
-        it 'raises error on identical body' do
-          subject
-          expect(assigns['comment'].errors.full_messages)
-          .to include('Body identical to last body')
-        end
+        include_examples 'flashs error message on post view', 'Commenter identical to last commenter'
+        include_examples 'flashs error message on post view', 'Body identical to last body'
         include_examples 'fails to create with invalid fields'
       end
     end
@@ -95,7 +98,7 @@ describe CommentsController do
              post_id: test_post.id, 
              comment: attributes_for(:comment)
       end
-      it 'stores comment in post.comments' do
+      it 'stores comment in Comment' do
         expect { subject }
         .to change(Comment, :count).by(1)
       end
@@ -124,7 +127,7 @@ describe CommentsController do
     context 'when post id is valid' do
       subject { delete :destroy, post_id: post.id, id: comment.id } 
 
-      it 'deletes comment from post.comments' do 
+      it 'deletes comment from Comment' do 
         expect { subject }
         .to change(Comment, :count).by(-1)
       end
@@ -134,6 +137,18 @@ describe CommentsController do
         expect(response).to redirect_to post
       end
       include_examples 'renders 302 http status code'
+    end
+
+    context 'when comment destroy fails' do
+      subject { delete :destroy, post_id: post.id, id: comment.id } 
+      before :each do
+        allow_any_instance_of(Comment).to receive(:destroy).and_return(false)
+      end
+      it 'redirects to post show view' do 
+        subject
+        expect(response).to redirect_to post
+      end
+      include_examples 'flashs error message on post view', '댓글이 정상적으로 삭제되지 않았습니다'
     end
   end
 end
