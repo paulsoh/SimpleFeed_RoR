@@ -3,7 +3,7 @@ class Comment < ActiveRecord::Base
   belongs_to :post
 
   validates :commenter, presence: true
-  validates_length_of :body, presence: true, in: 5..140
+  validates :body, presence: true, length: {minimum: 5, maximum: 140}
 
   validate :validate_non_duplicated_comment, on: :create
 

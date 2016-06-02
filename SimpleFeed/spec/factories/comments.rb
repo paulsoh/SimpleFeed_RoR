@@ -21,10 +21,10 @@ FactoryGirl.define do
   end
 
   trait :long_body do 
-    body 'abc'*100
+    body 'a'*141
   end
 
   trait :short_body do 
-    body 'abc'
+    body 'abcd'
   end
 end
