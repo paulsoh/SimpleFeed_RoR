@@ -1,4 +1,13 @@
 <p id="notice"><%= notice %></p>
+<% unless flash[:errors].blank? %>
+<div id="errorExplanation">
+  <ul>
+    <% flash[:errors].each do |msg| %>
+      <li><%= msg %></li>
+    <% end %>
+  </ul>
+</div>
+<% end %>
 
 <p>
   <b>Name:</b>
