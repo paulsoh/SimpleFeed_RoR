@@ -52,7 +52,7 @@ describe CommentsController do
         end
         include_examples 'fails to create with invalid fields'
       end
-      context 'when body is not too short' do
+      context 'when body is too short' do
         subject do 
           post :create, 
                post_id: test_post.id, 
@@ -60,7 +60,7 @@ describe CommentsController do
         end
         include_examples 'fails to create with invalid fields'
       end
-      context 'when body is not too long' do
+      context 'when body is too long' do
         subject do 
           post :create, 
                post_id: test_post.id, 
@@ -76,12 +76,12 @@ describe CommentsController do
                comment: { commenter: comment.commenter,
                           body: comment.body }
         end
-        it 'identical commenter twice raises error' do
+        it 'raises error on identical commenter' do
           subject
           expect(assigns['comment'].errors.full_messages)
           .to include('Commenter identical to last commenter')
         end
-        it 'identical body twice raises error' do
+        it 'raises error on identical body' do
           subject
           expect(assigns['comment'].errors.full_messages)
           .to include('Body identical to last body')
@@ -95,7 +95,7 @@ describe CommentsController do
              post_id: test_post.id, 
              comment: attributes_for(:comment)
       end
-      it 'comment is stored in post.comments' do
+      it 'stores comment in post.comments' do
         expect { subject }
         .to change(Comment, :count).by(1)
       end
